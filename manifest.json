@@ -1,0 +1,20 @@
+{
+  "name": "UrlZ Site - Custom URL",
+  "short_name": "UrlZ Site",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#000",
+  "icons": [
+    {
+      "src": "myurllogo.png",
+      "sizes": "409x408",
+      "type": "image/png"
+    },
+    {
+      "src": "myurllogo.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="myurllogo.png" type="image/png"> 
+    <title>Redirecting...</title>
+    
+    <style>
+        body { 
+            font-family: sans-serif; 
+            text-align: center; 
+            padding-top: 100px; 
+            color: #333; 
+            background-color: #f4f4f4;
+        }
+        #message {
+            color: #d9534f; /* Red for error/not found */
+        }
+        #action-area a {
+            display: inline-block; 
+            margin-top: 25px; 
+            padding: 10px 20px; 
+            background-color: #007bff; 
+            color: white; 
+            text-decoration: none; 
+            border-radius: 5px; 
+            transition: background-color 0.3s;
+        }
+        #action-area a:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1 id="message">Looking up short link...</h1>
+    <p id="submessage">Please wait a moment.</p>
+    <div id="action-area"></div>
+    
+    <script>
+        (async function() {
+            // Get the raw path, removing leading slash and query string
+            const rawPath = window.location.pathname.substring(1).split('?')[0]; 
+            const messageEl = document.getElementById("message");
+            const subMessageEl = document.getElementById("submessage");
+            const actionAreaEl = document.getElementById("action-area");
+
+            // Define known internal file paths (REMOVED 'shorturl.html')
+            const appFiles = [
+                'index.html', 
+                '404.html'
+            ];
+
+            // 1. Handle Internal Files (Root, index, or 404 access)
+            if (!rawPath || appFiles.includes(rawPath.toLowerCase())) {
+                // Redirects to the main app page when the root domain or 404 is accessed directly
+                window.location.replace('/index.html'); 
+                return;
+            }
+
+            // 2. Proceed with dynamic link lookup (for short links)
+            try {
+                // Use cache-busting to ensure we always get the freshest links.json
+                const linksJsonUrl = `/links.json?t=${Date.now()}`;
+                
+                messageEl.textContent = "Looking up short link...";
+                subMessageEl.textContent = `Searching for: /${rawPath}`;
+
+                // Fetch link data without waiting for the animation/text updates
+                const response = await fetch(linksJsonUrl, { cache: "no-store" });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load link registry. Sync from the creator page might be pending.`);
+                }
+
+                const linksData = await response.json();
+                const decodedPath = decodeURIComponent(rawPath);
+
+                // Find the long URL
+                const longUrl = linksData[decodedPath];
+
+                if (longUrl && typeof longUrl === 'string' && longUrl.startsWith('http')) {
+                    // *** FASTEST REDIRECT: EXECUTE IMMEDIATELY ***
+                    window.location.replace(longUrl);
+                    
+                } else {
+                    // Link not found or invalid data
+                    throw new Error(`Short link '/${decodedPath}' was not found in the registry.`);
+                }
+
+            } catch (error) {
+                // --- Fallback State: Show Error Message and Button ---
+                console.error("Redirect failed:", error);
+                
+                messageEl.textContent = `Error: Link Not Found`;
+                subMessageEl.textContent = error.message; 
+                
+                // Show a helpful button to get the user back to the app
+                actionAreaEl.innerHTML = `<a href="index.html">Return to Link Creator</a>`;
+            }
+        })();
+    </script>
+</body>
+</html>
+

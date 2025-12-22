@@ -1,0 +1,5 @@
+# robots.txt for Custom Link URL Shortener
+# Allows all crawlers to access the entire site.
+
+User-agent: *
+Allow: /

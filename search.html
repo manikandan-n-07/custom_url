@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="icon" href="myurllogo.png" type="image/png"> 
+    <title>Search Query</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+
+    <style>
+        :root {
+            --text: #ffffff;
+            --muted: #c9d1e6;
+            --accent: #4da6ff;
+            --card: rgba(255, 255, 255, 0.08);
+            --border-color: rgba(255, 255, 255, 0.2);
+            --placeholder-color-dark: #333333;
+            --placeholder-color-light: #cccccc;
+            --sidebar-bg: rgba(255,255,255,0.15);
+            --section-title: #4da6ff;
+        }
+
+        body {
+            font-family: "Poppins", sans-serif;
+            color: var(--text);
+            min-height: 100vh;
+            padding: 0; /* Remove padding to handle fixed header */
+            position: relative;
+            z-index: 0;
+            background: #0d1e3a; 
+        }
+
+        /* Vanta.js Target Element Style */
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+        }
+
+        /* Static Dark Overlay to maintain readability */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: -1;
+        }
+
+        /* --- Header and Sidebar Styles --- */
+        header {
+            padding: 10px 20px;
+            background: rgba(0, 0, 0, 0.4);
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            z-index: 100;
+        }
+
+        .hamburger {
+            font-size: 28px;
+            cursor: pointer;
+            color: white;
+        }
+
+        .sidebar{
+            position:fixed;
+            top:0; left:-260px;
+            width:260px;
+            height:100%;
+            padding:30px 20px;
+            transition:0.3s;
+            z-index:2000;
+            overflow-y:auto; 
+            max-height:100vh;
+        }
+        .sidebar.active{left:0;}
+        .sidebar a{
+            display:block;
+            padding:15px 0;
+            color:#fff;
+            font-size:20px;
+            text-decoration:none;
+            border-bottom:1px solid rgba(255,255,255,0.2);
+        }
+        .sidebar a:hover{color:var(--accent);}
+        .close-btn{
+            font-size:22px;
+            color:#fff;
+            cursor:pointer;
+            text-align:right;
+            margin-bottom:20px;
+            display:block;
+        }
+
+        .main-content-wrapper {
+            padding: 60px 20px 40px; /* Add padding for fixed header and bottom margin */
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            max-width: 1200px;
+            width: 100%;
+            margin: auto;
+        }
+
+        /* --- Search/Results Styles --- */
+
+        .search-container {
+            background: var(--card);
+            padding: 40px;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+            width: 100%;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .search-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 30px rgba(0, 0, 0, 0.8);
+        }
+
+        .search-container h2 {
+            text-align: center;
+            color: var(--accent);
+            margin-bottom: 5px;
+            font-size: 2rem;
+        }
+
+        .search-controls {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .search-input, .sheet-select {
+            padding: 12px;
+            border: none;
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            color: var(--text);
+            font-size: 1rem;
+            box-sizing: border-box;
+            transition: background-color 0.3s, box-shadow 0.3s;
+        }
+
+        .search-input {
+            width: 100%;
+        }
+
+        .sheet-select {
+            width: auto;
+            min-width: 150px;
+            transition: all 0.3s ease-in-out;
+            border-radius: 8px;
+            padding: 8px 12px;
+            background-color: rgba(255, 255, 255, 0.05);
+            color: #fff;
+            border: 1px solid var(--accent);
+        }
+
+        .search-input::placeholder {
+            color: var(--placeholder-color-light);
+            opacity: 1; 
+        }
+
+        .search-input:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 10px var(--accent);
+        }
+
+        .sheet-select option {
+            background-color: #222;
+            color: #fff;
+            padding: 6px 10px;
+        }
+
+        .sheet-select:focus {
+            outline: none;
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 0 15px var(--accent), 0 0 30px var(--accent);
+            transform: scale(1.05);
+            animation: glowPulse 1.5s infinite alternate;
+        }
+
+        @keyframes glowPulse {
+            from { box-shadow: 0 0 10px var(--accent), 0 0 20px var(--accent); }
+            to { box-shadow: 0 0 20px var(--accent), 0 0 40px var(--accent); }
+        }
+
+        .results-container {
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 16px;
+            padding: 20px;
+            width: 100%;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+            z-index: 10;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            width: 100%;
+        }
+
+        .results-table {
+            width: 100%;
+            min-width: 800px;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+            color: var(--muted);
+        }
+
+        .results-table th, .results-table td {
+            padding: 12px 15px;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+            word-wrap: break-word;
+        }
+
+        .results-table th {
+            color: var(--accent);
+            font-weight: 600;
+            background-color: rgba(255, 255, 255, 0.05);
+            position: sticky;
+            top: 0;
+        }
+
+        .results-table tr {
+            transition: background-color 0.3s, transform 0.2s;
+        }
+
+        .results-table tr:hover {
+            background-color: rgba(255, 255, 255, 0.03);
+            transform: scale(1.01);
+            cursor: pointer;
+        }
+
+        .message {
+            text-align: center;
+            color: var(--muted);
+            margin-top: 20px;
+        }
+
+        .results-table a {
+            color: var(--accent);
+            text-decoration: none;
+            transition: color 0.3s, text-decoration 0.3s;
+        }
+
+        .results-table a:hover {
+            text-decoration: underline;
+            color: #8cd2ff;
+        }
+
+        /* --- HIGHLIGHT STYLE ADDED FOR SEARCH MATCHES --- */
+        .results-table .highlight {
+            background-color: #ffeb3b; /* Bright Yellow */
+            color: #111; /* Dark text for contrast */
+            padding: 1px 2px;
+            border-radius: 4px;
+            font-weight: 500;
+          
+        }
+        /* ----------------------------------------------- */
+    </style>
+</head>
+<body>
+    <div id="vanta-bg"></div> 
+
+    <div class="sidebar" id="sidebar">
+        <span class="close-btn" onclick="toggleSidebar()">Menu ×</span>
+        <a href="index.html#home">Home</a>
+        <a href="index.html#shortener">Create Link</a>
+        <a href="index.html#history">History</a>
+        <a href="index.html#contact">Contact Us</a>
+    </div>
+
+    <header>
+        <span class="hamburger" onclick="toggleSidebar()">☰</span>
+    </header>
+
+    <div class="main-content-wrapper">
+        <div class="main-container">
+            <div class="search-container">
+                <h2>Professional Search</h2>
+                <div class="search-controls">
+                    <input type="text" id="searchInput" class="search-input" placeholder="Start typing to search...">
+                    <select id="sheetSelect" class="sheet-select">
+                        <option value="1pNi3l9cx6CJI6B1cqgeAXGz42u7Rmf46CNV_zP6zUrw">Contact Us</option>
+                        <option value="1iI2Wx66Qo388F3UhZD1Tn-vPXHP3CZjIWfAsbe36bos">Public Links</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="results-container">
+                <p class="message" id="statusMessage">Enter your search query.</p>
+                <div class="table-wrapper">
+                    <table class="results-table" id="resultsTable"></table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    const searchInput = document.getElementById('searchInput');
+    const sheetSelect = document.getElementById('sheetSelect');
+    const resultsTable = document.getElementById('resultsTable');
+    const statusMessage = document.getElementById('statusMessage');
+
+    const scriptURL = "https://script.google.com/macros/s/AKfycbztBdPXTiIgAFY4gLeFO5sGLL1rnsiAd_M1FOHeAEBRgB1xuk6eaaVNhRCSAmQK_pZW/exec";
+
+    let allData = [];
+    let debounceTimer;
+    const urlPattern = /^(https?:\/\/[^\s$.?#].[^\s]*)$/i;
+
+    function renderTable(data, query = '') {
+        if (data.length === 0) {
+            resultsTable.innerHTML = '';
+            statusMessage.textContent = 'No entries found.';
+            return;
+        }
+
+        statusMessage.textContent = '';
+        const headers = Object.keys(data[0]);
+        let tableHTML = '<thead><tr>';
+        
+        // Create regex for highlighting, only if a query exists
+        // Escape special regex characters in the query
+        const highlightRegex = query ? new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi') : null;
+
+        // Add the S.No. header
+        tableHTML += `<th>S.No.</th>`;
+
+        headers.forEach(header => {
+            tableHTML += `<th>${header}</th>`;
+        });
+        tableHTML += '</tr></thead><tbody>';
+
+        data.forEach((row, index) => {
+            tableHTML += '<tr>';
+
+            // Add the serial number cell
+            tableHTML += `<td>${index + 1}</td>`;
+
+            headers.forEach(header => {
+                const cellValue = row[header];
+                let cellContent = String(cellValue); // Ensure value is a string
+
+                if (urlPattern.test(cellContent)) {
+                    // It's a URL, wrap in an anchor tag first
+                    cellContent = `<a href="${cellContent}" target="_blank">${cellContent}</a>`;
+                }
+                
+                // Apply highlighting if a query is present
+                if (highlightRegex) {
+                    // Use a function in replace to wrap matches in a highlight span
+                    cellContent = cellContent.replace(highlightRegex, (match) => {
+                        return `<span class="highlight">${match}</span>`;
+                    });
+                }
+
+                tableHTML += `<td>${cellContent}</td>`;
+            });
+            tableHTML += '</tr>';
+        });
+
+        tableHTML += '</tbody>';
+        resultsTable.innerHTML = tableHTML;
+    }
+
+    function filterData(query) {
+        const trimmedQuery = query.trim();
+        if (trimmedQuery.length === 0) {
+            renderTable(allData, '');
+            return;
+        }
+
+        const lowerCaseQuery = trimmedQuery.toLowerCase();
+        const filteredData = allData.filter(row => {
+            for (const key in row) {
+                if (String(row[key]).toLowerCase().includes(lowerCaseQuery)) {
+                    return true;
+                }
+            }
+            return false;
+        });
+        renderTable(filteredData, trimmedQuery); // Pass the query for highlighting
+    }
+
+    function fetchData() {
+        const selectedSheetId = sheetSelect.value;
+        statusMessage.textContent = 'Loading all data from the sheet... Please wait.';
+
+        fetch(`${scriptURL}?sheetId=${encodeURIComponent(selectedSheetId)}`)
+            .then(response => response.json())
+            .then(result => {
+                if (result.status === 'SUCCESS' && result.data) {
+                    allData = result.data;
+                    renderTable(allData, searchInput.value.trim()); // Render and highlight if there's text
+                    statusMessage.textContent = `Data loaded successfully. ${allData.length} records found. Start typing to filter.`;
+                } else {
+                    resultsTable.innerHTML = '';
+                    statusMessage.textContent = result.message || 'An error occurred while fetching data. Check your script URL and permissions.';
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                resultsTable.innerHTML = '';
+                statusMessage.textContent = 'A network error occurred. Check your console.';
+            });
+    }
+
+    searchInput.addEventListener('input', () => {
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+            filterData(searchInput.value.trim());
+        }, 300);
+    });
+
+    sheetSelect.addEventListener('change', () => {
+        searchInput.value = '';
+        fetchData();
+    });
+
+    document.addEventListener('DOMContentLoaded', () => {
+        fetchData();
+    });
+
+    document.addEventListener('contextmenu', function(e) {
+        e.preventDefault();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'F12' || (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i' || e.key === 'C' || e.key === 'c' || e.key === 'J' || e.key === 'j')) || (e.ctrlKey && (e.key === 'U' || e.key === 'u'))) {
+            e.preventDefault();
+        }
+    });
+
+    document.addEventListener('dragstart', function(e) {
+        e.preventDefault();
+    });
+
+    function toggleSidebar(){  
+        document.getElementById("sidebar").classList.toggle("active");  
+    }
+
+    // Global click listener to close sidebar when clicking outside
+    document.addEventListener("click", function(e){  
+        const sidebar = document.getElementById("sidebar");  
+        const hamburger = document.querySelector(".hamburger"); 
+
+        // Ensure both sidebar and hamburger exist and check if click is outside both
+        if(sidebar && sidebar.classList.contains("active") && !sidebar.contains(e.target) && !hamburger.contains(e.target)){  
+            sidebar.classList.remove("active");  
+        }  
+    });  
+
+    const sections = document.querySelectorAll(".section, .event-gallery"); 
+    const observer = new IntersectionObserver(entries=>{  
+        entries.forEach(entry=>{  
+            if(entry.isIntersecting){  
+                entry.target.classList.add("show");  
+            }  
+        });  
+    },{threshold:0.05});  
+    sections.forEach(sec=>observer.observe(sec)); 
+  // 3. Vanta.js Initialization Script
+        document.addEventListener('DOMContentLoaded', () => {
+            VANTA.BIRDS({
+                el: "#vanta-bg", // Target the new div ID
+                mouseControls: true,
+                touchControls: true,
+                gyroControls: false,
+                minHeight: 200.00,
+                minWidth: 200.00,
+                scale: 1.00,
+                scaleMobile: 1.00,
+                birdSize: 1.90,
+                // You can add color customization here to match your theme:
+                color1: 0x0c0f1a, // Deep Space Blue (var(--base-bg-color))
+                color2: 0x00bcd4, // Accent Cyan (var(--accent))
+                backgroundColor: 0x0c0f1a,
+            });
+        });
+</script>
+
+</body>
+</html>

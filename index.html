@@ -1,0 +1,1513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="title" content="Custom Link - URLz Shortener">
+    <meta name="description" content="Free online URL shortener tool to make long links short, custom, and easy to manage. Boost your sharing speed and track performance instantly. Create custom, memorable short URLs (like urlz.site/event) instantly! Fast, free URL shortening powered by Google Apps Script.">
+    <meta name="keywords" content="custom url shortener, long url to short url, custom shorten url, create short link, free url shortener, short link generator, urlz.site">
+    <meta name="author" content="Manikandan N">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://urlz.site/">
+    <meta property="og:title" content="Custom Link - URLz Shortener">
+    <meta property="og:description" content="Free online URL shortener tool to make long links short, custom, and easy to manage. Boost your sharing speed and track performance instantly. Create custom, memorable short URLs (like urlz.site/event) instantly! Fast, free URL shortening powered by Google Apps Script.">
+    <meta property="og:image" content="https://urlz.site/myurllogo.png"> <link rel="icon" href="myurllogo.png" type="image/png">
+    <link rel="canonical" href="https://urlz.site/" />
+    <link rel="manifest" href="manifest.json">
+    <link rel="icon" href="src/img/myurllogo.png" type="image/png"> 
+    <title>Custom Link - URLz Shortener</title>
+    
+    <style>
+        /* Modern Space Theme Variables */
+        :root{
+            --sidebar-bg: #0d1a26;
+            --text: #fff;
+            --muted: #aebacd;
+            --card: rgba(255,255,255,0.1); /* Lighter card background */
+            --accent: #00bcd4; /* Cyan/Aqua accent for a modern look */
+            --section-title: #00bcd4;
+            --success-color: #4CAF50; /* Green */
+            --error-color: #F44336; /* Red */
+            --warning-color: #FFC107; /* Amber/Yellow */
+            --input-bg: rgba(255,255,255,0.15);
+            --input-border: #888;
+            --loading-text-color: #fff;
+            --validation-available: var(--success-color);
+            --validation-taken: var(--error-color);
+            --base-bg-color: #0c0f1a; /* Deep Space Blue */
+        }
+        *{box-sizing:border-box; margin:0; padding:0; scroll-behavior:smooth;}
+        body{
+            font-family:"Poppins", sans-serif;
+            color:var(--text);
+            min-height:100vh;
+            position:relative;
+            z-index:0;
+            background-color: var(--base-bg-color); /* Fallback color */
+        }
+
+        /* -------------------------------------- */
+        /* NEW: VANTA.JS BACKGROUND SETUP */
+        /* -------------------------------------- */
+        /* The VANTA effect will attach to this element */
+        #vanta-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2; /* Deep background layer */
+        }
+        /* Overlay to keep content readable over the animation */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.4); /* Darkens the animation slightly */
+            z-index: -1;
+        }
+        /* -------------------------------------- */
+        /* END VANTA.JS BACKGROUND SETUP */
+        /* -------------------------------------- */
+
+
+        header{
+            display:flex;
+            justify-content:space-between;
+            align-items:center;
+            padding:15px 20px;
+            background:rgba(0,0,0,0.8);
+            position:sticky;
+            top:0;
+            z-index:1000;
+        }
+
+        .left-header {
+            display:flex;
+            align-items:center;
+            gap:15px;
+        }
+
+        header .logo-text {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+        /* NEW CSS for the small header image */
+        .left-header .small-logo-img {
+            height: 30px; /* Standard height for a small header logo */
+            width: auto;
+        }
+        /* END NEW CSS */
+
+
+        .page-title {
+            margin-top:20px;
+            font-size:45px;
+            color: var(--text);
+            text-align:center;
+            text-shadow: 0 0 10px rgba(0, 188, 212, 0.7);
+        }
+        
+        /* Stars removed as Vanta.js handles the dynamic background */
+
+        /* Sidebar Navigation */
+        .sidebar{
+            position:fixed;
+            top:0; left:-260px;
+            width:260px;
+            height:100%;
+            background:var(--sidebar-bg);
+            padding:30px 20px;
+            transition:0.3s;
+            z-index:2000;
+            overflow-y:auto;
+            max-height:100vh;
+        }
+        .sidebar.active{left:0;}
+        .sidebar a{
+            display:block;
+            padding:15px 0;
+            color:#fff;
+            font-size:20px;
+            text-decoration:none;
+            border-bottom:1px solid rgba(255,255,255,0.1);
+            transition: 0.3s;
+        }
+        .sidebar a:hover{color:var(--accent);}
+        .close-btn{
+            font-size:22px;
+            color:#fff;
+            cursor:pointer;
+            text-align:right;
+            margin-bottom:20px;
+            display:block;
+        }
+
+        .hamburger{
+            font-size:28px;
+            cursor:pointer;
+            color:white;
+        }
+
+        .section{
+            margin:40px auto;
+            padding:35px;
+            max-width:800px;
+            background:var(--card);
+            border-radius:16px;
+            box-shadow:0 8px 30px rgba(0,0,0,0.8);
+            opacity:0;
+            transform:translateY(40px);
+            transition:all 0.8s ease-out;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .section.show{
+            opacity:1;
+            transform:translateY(0);
+        }
+        .section h1,
+        .contact h2 {
+            font-size:32px;
+            margin-bottom:14px;
+            text-align:center;
+            color:var(--section-title);
+            text-shadow: 0 0 8px rgba(0, 188, 212, 0.6);
+        }
+
+        .section p {
+            font-size:16px;
+            color:var(--muted);
+            text-align:center;
+            margin-bottom: 20px;
+        }
+        
+        /* URL Shortener Specific Styles - HIGH CONTRAST */
+        #shortenerForm label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-size: 16px;
+            color: var(--text);
+            font-weight: 600;
+        }
+        input[type="text"], input[type="url"], input[type="email"], .contact-form input, .contact-form textarea {
+            width: 100%;
+            padding: 15px;
+            margin: 5px 0 0 0;
+            border: 2px solid var(--input-border);
+            border-radius: 8px;
+            box-sizing: border-box;
+            background-color: var(--input-bg);
+            color: var(--text);
+            font-size: 18px;
+            transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .contact-form input[type="text"], .contact-form input[type="email"], .contact-form input[type="tel"], .contact-form textarea {
+            background-color: #fff; /* White background for contact form inputs for high contrast */
+            color: #333;
+            font-size: 16px;
+        }
+        .contact-form input::placeholder, .contact-form textarea::placeholder {
+            color: #999;
+            opacity: 1;
+        }
+
+        input::placeholder {
+            color: var(--muted);
+            opacity: 0.7;
+        }
+
+        input[type="text"]:focus, input[type="url"]:focus, input[type="email"]:focus, .contact-form input:focus, .contact-form textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 10px rgba(0, 188, 212, 0.8);
+            background-color: rgba(255,255,255,0.25);
+        }
+        .contact-form input:focus, .contact-form textarea:focus {
+             background-color: #f0f8ff; /* Light background on focus */
+             color: #333;
+        }
+
+        
+        /* Validation Status Messages */
+        .validation-message {
+            font-size: 0.9em;
+            padding: 5px 0 15px 0;
+            display: block;
+            text-align: left;
+            min-height: 25px;
+        }
+        .validation-message.available { color: var(--validation-available); }
+        .validation-message.taken, .validation-message.invalid { color: var(--validation-taken); }
+        .validation-message.checking { color: var(--warning-color); }
+        
+        /* Short Code Constraint Text */
+        #slugConstraint {
+            font-size: 0.85em;
+            color: var(--muted);
+            margin-bottom: 8px;
+            text-align: left;
+        }
+        
+        #submitBtn {
+            background-color: var(--accent);
+            color: #000;
+            padding: 15px 15px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            margin-top: 20px;
+            width: 100%;
+            font-size: 18px;
+            font-weight: 700;
+            transition: background-color 0.3s, transform 0.2s;
+            letter-spacing: 1px;
+        }
+        #submitBtn:hover:not(:disabled) {
+            background-color: #34e1f7;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 188, 212, 0.5);
+        }
+        #submitBtn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+
+        /* Primary Output Area for Latest Result/Loading */
+        #output {
+            margin-top: 30px;
+            padding: 25px;
+            border-radius: 12px;
+            word-wrap: break-word;
+            border: 2px solid transparent;
+            text-align: center;
+            font-size: 17px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.5);
+            animation: fadeIn 0.5s ease-out;
+            font-weight: 500;
+        }
+
+        .success {
+            background-color: rgba(76, 175, 80, 0.2);
+            border-color: var(--success-color);
+            color: var(--text);
+        }
+        .error {
+            background-color: rgba(244, 67, 54, 0.2);
+            border-color: var(--error-color);
+            color: var(--text);
+        }
+        
+        /* High-Contrast Loading State */
+        .loading {
+            border-color: var(--warning-color);
+            color: var(--text);
+            font-weight: 700;
+            background-color: var(--sidebar-bg);
+            padding: 25px;
+            overflow: hidden;
+        }
+
+        /* Loading Area Container */
+        #loadingArea {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 0;
+        }
+        
+        /* Container for the text messages */
+        #conversionDisplay {
+            z-index: 2;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            padding: 10px 0 20px 0;
+        }
+        
+        .loading-message-box {
+            background-color: #fff;
+            color: #333;
+            padding: 10px 15px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1.1em;
+            width: 100%;
+            max-width: 90%;
+            box-shadow: 0 0 15px rgba(0, 188, 212, 0.5);
+            transition: all 0.5s ease-in-out;
+            opacity: 0;
+        }
+
+        /* Loading GIF Container (Larger and White) */
+        .loading-gif-container {
+            width: 300px; 
+            height: 300px;
+            background-color: white; 
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 20px auto; 
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.4);
+            padding: 0; 
+            transform: scale(0.8); 
+            animation: pulse 1.5s infinite alternate;
+        }
+        .loading-gif {
+            width: 100%; /* Stretch GIF to cover the 150x150 container */
+            height: 100%;
+            object-fit: cover; 
+            border-radius: 8px; 
+            display: block;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(0.9); box-shadow: 0 0 15px rgba(255, 255, 255, 0.4); }
+            to { transform: scale(1.0); box-shadow: 0 0 25px rgba(77, 166, 255, 0.8); }
+        }
+
+
+        /* Success Container for URL Details */
+        #successUrlDetails {
+            margin: 0 25px 20px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: left;
+            word-break: break-word;
+        }
+        #successUrlDetails .url-label {
+            font-size: 0.9em;
+            color: var(--muted);
+            margin: 0;
+            padding: 0;
+            display: block;
+            margin-top: 10px;
+        }
+        #successUrlDetails .url-label:first-child {
+            margin-top: 0;
+        }
+        #successUrlDetails strong {
+            color: var(--text);
+            display: block;
+            margin-top: 5px;
+            font-size: 1.0em;
+        }
+        #successUrlDetails strong a {
+             color: var(--accent);
+             font-weight: 700;
+        }
+
+
+        /* Dedicated Countdown Status */
+        #countdownStatus {
+            margin-top: 20px;
+            padding: 10px;
+            background: rgba(255, 193, 7, 0.1);
+            border-radius: 6px;
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+            font-weight: 600;
+            font-size: 1.1em;
+            display: block;
+        }
+        
+        /* Success Status Overrides */
+        #countdownStatus.complete {
+            background-color: rgba(76, 175, 80, 0.3);
+            border-color: var(--success-color);
+            color: var(--text);
+        }
+        #countdownStatus.complete span {
+            color: var(--success-color) !important;
+        }
+        
+        /* HISTORY SECTION STYLES */
+        #linkHistoryContainer {
+            margin-top: 40px;
+            padding: 0;
+            max-width: 800px;
+            margin-left: auto;
+            margin-right: auto;
+            border-radius: 16px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.6);
+            overflow: hidden;
+        }
+        #linkHistoryContainer h2 {
+            background: var(--sidebar-bg);
+            color: var(--accent);
+            font-size: 24px;
+            padding: 15px 25px;
+            margin-bottom: 0;
+            text-align: center;
+        }
+        #linkHistoryList {
+            padding: 0 25px 25px;
+            background: var(--card);
+        }
+        .history-item {
+            margin-top: 25px;
+            padding: 15px;
+            border-radius: 12px;
+            border: 2px solid var(--success-color);
+            background: rgba(76, 175, 80, 0.1);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+            text-align: left;
+            position: relative;
+            transition: all 0.5s ease-in-out;
+        }
+        .history-item .success-header {
+            font-size: 1.1em;
+            color: var(--success-color);
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .history-item .history-link-details {
+             margin: 10px 0;
+             padding: 10px 0;
+             border-top: 1px dashed rgba(255,255,255,0.1);
+             border-bottom: 1px dashed rgba(255,255,255,0.1);
+             text-align: left;
+        }
+        .history-item .history-link-details strong {
+             font-size: 1.0em;
+             color: var(--text);
+             display: block;
+             margin-top: 5px;
+             word-break: break-all;
+             white-space: normal;
+        }
+        .history-item .history-link-details strong a {
+            color: var(--accent);
+            word-break: break-all;
+            display: inline-block;
+        }
+        .history-item .history-link-details .url-label {
+            color: var(--muted);
+            font-size: 0.9em;
+        }
+
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        /* Link Display and Copy Button Adjustment */
+        #linkDisplay {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background-color: #fff;
+            border: 1px solid var(--success-color);
+            margin-top: 15px;
+            border-radius: 6px;
+            transition: all 0.3s ease-in-out;
+            /* FIX: Ensure the display is flex for button alignment */
+            display: flex; 
+        }
+        
+        /* New class for consistency in history items */
+        .history-item .link-display-box {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background-color: #fff;
+            border: 1px solid var(--success-color);
+            margin-top: 15px;
+            border-radius: 6px;
+        }
+        
+        #shortLinkText {
+            font-weight: bold;
+            color: #333;
+            text-decoration: none;
+            flex-grow: 1;
+            min-width: 0;
+            text-align: left;
+            padding-right: 10px;
+            font-size: 1.1em;
+            word-break: break-all;
+        }
+        #shortLinkText:hover {
+            text-decoration: underline;
+        }
+        
+        /* The standard button style for consistency */
+        #linkDisplay button, .history-item button { /* Applied to history item button as well */
+            background-color: var(--success-color);
+            color: #fff;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: none;
+            transition: background-color 0.3s, transform 0.2s, opacity 0.3s;
+            font-size: 14px;
+            width: auto;
+            margin: 0;
+            font-weight: 600;
+            flex-shrink: 0;
+            /* FIX: Explicitly set height for better alignment */
+            line-height: 1.4; 
+            height: auto;
+        }
+        #linkDisplay button:hover, .history-item button:hover {
+            background-color: #3e8e41;
+            transform: translateY(-1px);
+        }
+        
+        .reference-link {
+            font-size: 0.8em;
+            color: var(--muted);
+            margin-top: 10px;
+            word-wrap: break-word;
+            text-align: center;
+        }
+        
+        /* Contact Section Styles */
+        .contact{
+            background:var(--sidebar-bg);
+            padding:40px 25px;
+            text-align:center;
+            border-radius:16px;
+            margin:40px auto;
+            max-width:800px;
+            box-shadow:0 4px 12px rgba(0,0,0,0.6);
+        }
+
+        /* Contact Form Styles */
+        .contact-form {display: flex;flex-direction: column;gap: 15px;max-width: 500px;margin: 0 auto;padding: 20px;}
+        .contact-form textarea {height: 100px;}
+        .contact-form button {background-color: var(--accent);color: #000;padding: 10px 18px;border: none;border-radius: 8px;cursor: pointer;font-size: 1rem;font-weight: 700;transition: 0.3s;align-self: flex-start; margin-top: 10px;}
+        .contact-form button:hover:not(:disabled) {background: #fff;color: var(--accent);transform: scale(1.05);}
+        .contact-form button:disabled {background-color: #555;cursor: not-allowed;transform: none;}
+        
+        .status-box {margin-top: 15px;padding: 15px;border-radius: 8px;text-align: center;font-size: 16px; font-weight: bold;}
+        .status-success {margin-top: 15px;padding: 15px;border-radius: 8px;text-align: center;font-size: 16px; font-weight: bold; background-color:var(--success-color);color: #fff;}
+        .submitting{background-color: var(--warning-color);color: #333;font-weight: bold;border-radius: 16px;padding: 20px 25px;box-shadow: 0 6px 18px rgba(0,0,0,0.4);animation: fadeSlide 0.7s ease forwards;max-width: 500px;margin: 15px auto;}
+        .status-error {background: var(--error-color);color: #fff; font-weight: bold;border-radius: 16px;padding: 20px 25px;box-shadow: 0 6px 18px rgba(0,0,0,0.4);animation: fadeSlide 0.7s ease forwards;max-width: 500px;margin: 15px auto;}
+        .error-input {border-color: var(--error-color) !important;}
+        .error-message {color: var(--error-color);font-size: 12px;margin-top: 5px;margin-bottom: 3px;display: none;text-align: left;}
+        .form-group {display: flex;flex-direction: column;}
+        
+        /* NEW: Style for the Wait/Cooldown message box */
+        .wait-notification {
+            margin: 10px 25px 25px;
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0, 188, 212, 0.15);
+            border: 1px solid var(--accent);
+            color: var(--text);
+            font-weight: 500;
+            font-size: 1em;
+            text-align: center;
+        }
+
+        .wait-notification h3 {
+            font-size: 1.2em;
+            margin: 0;
+            color: var(--accent);
+            font-weight: 700;
+        }
+    
+        /* MEDIA QUERIES FOR DESKTOP (Min-width: 768px) */
+        @media (min-width: 768px) {
+            .page-title { font-size: 55px; }
+            .contact { max-width: 800px; }
+        }
+    </style>
+   <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "WebSite",
+      // UPDATED: Use fully qualified ID for the definition
+      "@id": "https://urlz.site/#WebSite", 
+      "url": "https://urlz.site/",
+      "name": "Custom Link - URLz Shortener",
+      "description": "Free online URL shortener tool to make long links short, custom, and easy to manage. Boost your sharing speed and track performance instantly. Create custom, memorable short URLs (like urlz.site/event) instantly! Fast, free URL shortening powered by Google Apps Script.",
+      "publisher": {
+        // UPDATED: Use fully qualified ID for the reference
+        "@id": "https://urlz.site/#Organization" 
+      },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://urlz.site/{search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
+      },
+      "hasPart": {
+        "@type": "SiteNavigationElement",
+        "name": "Navigation Menu",
+        "about": "Key sections of the application.",
+        "url": [
+          "https://urlz.site/#home",
+          "https://urlz.site/#shortener",
+          "https://urlz.site/#history",
+          "https://urlz.site/#contact"
+        ]
+      }
+    },
+    {
+      "@type": "WebPage",
+      "url": "https://urlz.site/",
+      "name": "Custom Link Home Page",
+      "inLanguage": "en-US",
+      "isPartOf": {
+        // UPDATED: Use fully qualified ID for the reference
+        "@id": "https://urlz.site/#WebSite" 
+      },
+      "breadcrumb": {
+        "@type": "BreadcrumbList",
+        "itemListElement": [
+          {
+            "@type": "ListItem",
+            "position": 1,
+            "name": "Home",
+            "item": "https://urlz.site/#home"
+          }
+        ]
+      }
+    },
+    {
+      "@type": "Organization",
+      // UPDATED: Use fully qualified ID for the definition
+      "@id": "https://urlz.site/#Organization", 
+      "name": "Manikandan N's Custom Link Service",
+      "url": "https://urlz.site/",
+      "logo": "myurllogo.png",
+      "contactPoint": {
+        "@type": "ContactPoint",
+        "contactType": "customer service",
+        "email": "manilunar07@gmail.com"
+      }
+    },
+    {
+      "@type": "Person",
+      "name": "Manikandan N",
+      "url": "https://urlz.site/#contact"
+    }
+  ]
+}
+</script>
+</head>
+<body>
+    
+    <div id="vanta-bg"></div> 
+
+    <div class="sidebar" id="sidebar">
+        <span class="close-btn" onclick="toggleSidebar()">Menu ×</span>
+        <a href="#home">Home</a>
+        <a href="#shortener">Create Link</a>
+        <a href="#history">Link History</a>
+        <a href="#contact">Contact Support</a>
+    </div>
+
+    <header>
+        <div class="left-header">
+            <span class="hamburger" onclick="toggleSidebar()">☰</span>
+            <img src="myurllogo.png" alt="Logo" class="small-logo-img">
+            <span class="logo-text">Custom Link</span>
+        </div>
+    </header>
+    
+
+    <h1 class="page-title" id="home">The Ultimate Custom URL</h1>
+
+    <div class="section show" id="shortener">
+        <h1>🔗 Create Your Custom Short Link</h1>
+        <p style="text-align: center; color: var(--accent); font-size: 1.1em;">Generate quick, memorable links for our custom domain: <strong>https://urlz.site/</strong></p>
+        
+        <form id="shortenerForm">
+            <label for="longUrl">Destination URL (The long link)</label>
+            <input type="url" id="longUrl" name="longUrl" placeholder="https://www.your-long-url.com" required>
+            <span id="longUrlValidation" class="validation-message"></span>
+
+            <label for="slug">Custom Short URL (Link ID)</label>
+            <div id="slugConstraint">
+                Allowed characters: a-z, 0-9, dash (-), underscore (_), and forward slash (/).
+            </div>
+            <input type="text" id="slug" name="slug" placeholder="e.g., event-signup/register" pattern="^[a-zA-Z0-9_\-\/]+$" title="Only letters, numbers, hyphens, underscores, and forward slashes." required>
+            <span id="slugValidation" class="validation-message"></span>
+
+            <label for="emailInput">Email ID (For link management /notification - Optional)</label>
+            <input type="email" id="emailInput" name="email" placeholder="Your email for link updates (optional)">
+            <span id="emailValidation" class="validation-message"></span>
+            
+            <button type="submit" id="submitBtn">Create & Deploy Short Link</button>
+        </form>
+        <div id="output" style="display: none;"></div>
+    </div>
+
+    <div id="linkHistoryContainer" style="display: none;" class="section show">
+        <h2 id="history">Link Generation History</h2>
+        <div id="linkHistoryList">
+            </div>
+    </div>
+
+    <div class="contact" id="contact">
+        <h2>Contact Us</h2>
+        <p style="color: var(--muted); margin-bottom: 25px;">Have questions or need support? Send us a message!</p>
+        
+        <form class="contact-form" id="contactForm" novalidate action="https://script.google.com/macros/s/AKfycbyundLepP0bIa75zr9PwaLPvDzId1FAcqu17IH79JcWV8pkEFybIEVtFmnj1q30vcLY/" method="post">
+            <div class="form-group">
+                <input type="text" name="name" placeholder="Your Name" required>
+                <span class="error-message"></span>
+            </div>
+            <div class="form-group">
+                <input type="email" name="email" placeholder="Your Email" required>
+                <span class="error-message"></span>
+            </div>
+            <div class="form-group">
+                <input type="tel" name="phone" placeholder="Phone Number" required>
+                <span class="error-message"></span>
+            </div>
+            <div class="form-group">
+                <textarea name="message" placeholder="Your Message" required></textarea>
+                <span class="error-message"></span>
+            </div>
+            <button type="submit">Send Message</button>
+            <div id="status" class="status-box" style="display: none;"></div>
+        </form>
+<br>
+        <h2>Created BY</h2>
+        <h2>Manikandan N</h2>
+        <a href="admin.html" class="reference-link" style="color: black;">admin</a>
+    </div>
+
+   <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.birds.min.js"></script>
+    
+    <script>
+        // !! IMPORTANT: Configure your new Google App Script URLs here !!
+        const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwO4sl6GRmHIlrBFIx-kBR2UXluB8wyPMKbB0gEM-Oza5WN1AYT0LV2ryFzrpU8DqvN/exec'; 
+        const CUSTOM_DOMAIN_BASE = 'https://urlz.site/';
+        const CONTACT_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwiTBjPYhsxgtXCUyBsB1qGWoB3_QohsygO-IqC2LOAreEA3nNXzsh3Bn9JaEjNw5PV/exec'; 
+
+        // 3. Vanta.js Initialization Script
+        document.addEventListener('DOMContentLoaded', () => {
+            VANTA.BIRDS({
+                el: "#vanta-bg", // Target the new div ID
+                mouseControls: true,
+                touchControls: true,
+                gyroControls: false,
+                minHeight: 200.00,
+                minWidth: 200.00,
+                scale: 1.00,
+                scaleMobile: 1.00,
+                birdSize: 1.90,
+                // You can add color customization here to match your theme:
+                color1: 0x0c0f1a, // Deep Space Blue (var(--base-bg-color))
+                color2: 0x00bcd4, // Accent Cyan (var(--accent))
+                backgroundColor: 0x0c0f1a,
+            });
+        });
+
+        // --- All existing JavaScript logic follows (validation, submission, etc.) ---
+        
+        let slugCheckTimeout;
+        let isSlugAvailable = false;
+        let isUrlValid = false;
+        let isEmailValid = true;
+
+        const longUrlInput = document.getElementById('longUrl');
+        const slugInput = document.getElementById('slug');
+        const emailInput = document.getElementById('emailInput');
+        const submitBtn = document.getElementById('submitBtn');
+        const longUrlValidation = document.getElementById('longUrlValidation');
+        const slugValidation = document.getElementById('slugValidation');
+        const emailValidation = document.getElementById('emailValidation');
+        const outputDiv = document.getElementById('output');
+        const historyContainer = document.getElementById('linkHistoryContainer');
+        const historyList = document.getElementById('linkHistoryList');
+        
+        const loadingMessages = [
+            'Initiating Secure Deployment Protocol...',
+            'Validating Link ID & Destination...',
+            'Database Synchronization in Progress...',
+            'Finalizing Redirect Deployment...',
+        ];
+
+        const countdownIntervals = new Map();
+        const mainOutputId = 'main_output';
+
+        // --- Core Validation Functions ---
+        function updateSubmitButton() {
+            const isFinished = outputDiv.className === 'success' || outputDiv.className === 'loading';
+            submitBtn.disabled = isFinished || !(isSlugAvailable && isUrlValid && isEmailValid);
+        }
+
+        async function checkSlugAvailability(slug) {
+            if (slug.length < 3) {
+                slugValidation.className = 'validation-message invalid';
+                slugValidation.textContent = 'Link ID must be at least 3 characters.';
+                isSlugAvailable = false;
+                updateSubmitButton();
+                return;
+            }
+            const pattern = new RegExp(slugInput.getAttribute('pattern'));
+            if (!pattern.test(slug)) {
+                slugValidation.className = 'validation-message invalid';
+                slugValidation.textContent = 'Link ID contains unsupported characters.';
+                isSlugAvailable = false;
+                updateSubmitButton();
+                return;
+            }
+
+            slugValidation.className = 'validation-message checking';
+            slugValidation.textContent = 'Checking availability...';
+            
+            try {
+                const response = await fetch(`${APPS_SCRIPT_URL}?action=checkSlug&slug=${encodeURIComponent(slug)}`);
+                const result = await response.json();
+
+                if (result.available) {
+                    slugValidation.className = 'validation-message available';
+                    slugValidation.textContent = 'Link ID is available! ✅';
+                    isSlugAvailable = true;
+                } else {
+                    slugValidation.className = 'validation-message taken';
+                    slugValidation.textContent = 'Link ID is already taken. ❌';
+                    isSlugAvailable = false;
+                }
+            } catch (error) {
+                console.error("Slug check error:", error);
+                slugValidation.className = 'validation-message invalid';
+                slugValidation.textContent = 'Error checking ID. Try reloading. ⚠️';
+                isSlugAvailable = false;
+            }
+            updateSubmitButton();
+        }
+
+        function checkUrlExistence(url) {
+            const urlRegex = /^(ftp|http|https):\/\/[^ "]+$/;
+            if (!urlRegex.test(url)) {
+                longUrlValidation.className = 'validation-message invalid';
+                longUrlValidation.textContent = 'Please enter a valid URL (e.g., https://example.com). ❌';
+                isUrlValid = false;
+            } else {
+                longUrlValidation.className = 'validation-message available';
+                longUrlValidation.textContent = 'URL format is valid. ✅';
+                isUrlValid = true;
+            }
+            updateSubmitButton();
+        }
+        
+        function checkEmailValidity(email) {
+            if (!email) {
+                emailValidation.textContent = '';
+                isEmailValid = true;
+                return;
+            }
+            
+            const emailRegex = /^\S+@\S+\.\S+$/;
+            if (!emailRegex.test(email)) {
+                emailValidation.className = 'validation-message invalid';
+                emailValidation.textContent = 'Please enter a valid email format. ❌';
+                isEmailValid = false;
+            } else {
+                emailValidation.className = 'validation-message available';
+                emailValidation.textContent = 'Email format is valid. ✅';
+                isEmailValid = true;
+            }
+            updateSubmitButton();
+        }
+
+        function clearValidationMessages() {
+            longUrlValidation.textContent = '';
+            longUrlValidation.className = 'validation-message';
+            slugValidation.textContent = '';
+            slugValidation.className = 'validation-message';
+            emailValidation.textContent = '';
+            emailValidation.className = 'validation-message';
+            
+            isSlugAvailable = false;
+            isUrlValid = false;
+            isEmailValid = true;
+            
+            updateSubmitButton();
+        }
+        
+        function moveCurrentOutputToHistory() {
+            if (outputDiv.className !== 'success') return;
+
+            const currentOriginalUrlElement = outputDiv.querySelector('#successUrlDetails strong a');
+            const currentShortUrlElement = outputDiv.querySelector('#linkDisplay a');
+            const currentStatusElement = outputDiv.querySelector('#countdownStatus');
+            const currentScriptConfirmationElement = outputDiv.querySelector('#scriptConfirmation');
+
+            if (!currentOriginalUrlElement) return;
+
+            const currentOriginalUrl = currentOriginalUrlElement.href;
+            const currentShortUrl = currentShortUrlElement.textContent;
+            const currentScriptConfirmation = currentScriptConfirmationElement ? currentScriptConfirmationElement.textContent : 'No Script Confirmation available.';
+            const isCompleted = currentStatusElement.classList.contains('complete');
+
+            let remainingTime = 30;
+            const currentTimerElement = outputDiv.querySelector('#countdownTimer');
+            if (currentTimerElement && !isCompleted) {
+                const match = currentTimerElement.textContent.match(/(\d+) seconds/);
+                if (match) remainingTime = parseInt(match[1], 10);
+            }
+            
+            const currentIntervalId = countdownIntervals.get(mainOutputId);
+            if (currentIntervalId) {
+                clearInterval(currentIntervalId);
+                countdownIntervals.delete(mainOutputId);
+            }
+
+            const historyItem = document.createElement('div');
+            const histId = `hist_${Date.now()}`;
+            historyItem.className = 'history-item';
+
+            // --- HISTORY ITEM WITH NATIVE BUTTON (FIXED TEMPLATE) ---
+            historyItem.innerHTML = `
+                <div class="success-header">✅ Link Generated: ${new Date().toLocaleTimeString()}</div>
+                
+                <div class="history-link-details">
+                    <span class="url-label">Original URL:</span>
+                    <strong><a href="${currentOriginalUrl}" target="_blank" style="color: inherit; text-decoration: underline; word-break: break-all; display: inline-block;">${currentOriginalUrl}</a></strong>
+                    <span class="url-label" style="margin-top: 10px;">Shortened Link:</span>
+                    <strong><a href="${currentShortUrl}" target="_blank" style="color: var(--accent); text-decoration: underline;">${currentShortUrl}</a></strong>
+                </div>
+
+                <div id="linkDisplay_${histId}" class="link-display-box">
+                    <a id="shortLinkText_${histId}" href="${currentShortUrl}" target="_blank"
+                       style="font-weight: bold; color: #333; text-decoration: none; flex-grow: 1; min-width: 0; text-align: left; padding-right: 10px; font-size: 1.1em; word-break: break-all;">${currentShortUrl}</a>
+                    
+                    <button type="button" onclick="copyLink('${currentShortUrl}', this)">Copy</button>
+                </div>
+
+                <div id="countdownStatus_${histId}" class="success ${isCompleted ? 'complete' : ''}" style="margin-top: 20px; padding: 10px; border: 1px solid ${isCompleted ? 'var(--success-color)' : 'var(--warning-color)'}; color: ${isCompleted ? 'var(--text)' : 'var(--warning-color)'}; font-weight: 600; font-size: 1.1em; display: block; background: ${isCompleted ? 'rgba(76, 175, 80, 0.3)' : 'rgba(255, 193, 7, 0.1)'};">
+                    ${isCompleted ? 
+                        '<span style="font-weight: 700; color: var(--success-color);">🚀 Deployment Complete! Link is Fully Active.</span>'
+                        : 
+                        '<span style="display: block; font-weight: 700;">📡 Server Deployment Commenced...</span><span id="historyCountdownTimer_' + histId + '" style="display: block; margin-top: 5px;">Link active in: ' + remainingTime + ' seconds</span>'
+                    }
+                </div>
+                <p id="historyScriptConfirmation_${histId}" class="reference-link" style="display: ${isCompleted ? 'block' : 'none'}; margin: 10px 0 0 0;">${currentScriptConfirmation}</p>
+            `;
+            // --- END HISTORY ITEM ---
+            
+            historyList.prepend(historyItem);
+            historyContainer.style.display = 'block';
+
+            if (!isCompleted) {
+                let timer = remainingTime;
+                const newTimerElement = historyItem.querySelector(`#historyCountdownTimer_${histId}`);
+                const newStatusElement = historyItem.querySelector(`#countdownStatus_${histId}`);
+                const newScriptConfirmationElement = historyItem.querySelector(`#historyScriptConfirmation_${histId}`);
+
+                const historyInterval = setInterval(() => {
+                    timer--;
+                    if (timer >= 0) {
+                        newTimerElement.textContent = `Link active in: ${timer} seconds`;
+                    } else {
+                        clearInterval(historyInterval);
+                        newStatusElement.classList.add('complete');
+                        newStatusElement.innerHTML = `<span style="font-weight: 700; color: var(--success-color);">🚀 Deployment Complete! Link is Fully Active.</span>`;
+                        newScriptConfirmationElement.style.display = 'block';
+                    }
+                }, 1000);
+                
+                countdownIntervals.set(histId, historyInterval);
+            }
+
+            outputDiv.innerHTML = '';
+            outputDiv.className = '';
+            outputDiv.style.display = 'none';
+        }
+
+
+        function moveCompletedOutputToHistory(originalUrl, finalShortUrl, appsScriptResultText) {
+            countdownIntervals.delete(mainOutputId);
+            
+            const historyItem = document.createElement('div');
+            const histId = `hist_${Date.now()}`;
+            historyItem.className = 'history-item';
+
+            // --- COMPLETED HISTORY ITEM WITH NATIVE BUTTON (FIXED TEMPLATE) ---
+            historyItem.innerHTML = `
+                <div class="success-header">✅ Link Generated: ${new Date().toLocaleTimeString()}</div>
+                
+                <div class="history-link-details">
+                    <span class="url-label">Original URL:</span>
+                    <strong><a href="${originalUrl}" target="_blank" style="color: inherit; text-decoration: underline; font-size:13px; word-break: break-all; display: inline-block;">${originalUrl}</a></strong>
+                   <br> <span class="url-label" style="margin-top: 10px;">Shortened Link:</span>
+                    <strong><a href="${finalShortUrl}" target="_blank" style="color: var(--accent); text-decoration: underline;">${finalShortUrl}</a></strong>
+                </div>
+
+                <div id="linkDisplay_${histId}" class="link-display-box">
+                    <a id="shortLinkText_${histId}" href="${finalShortUrl}" target="_blank"
+                       style="font-weight: bold; color: #333; text-decoration: none; flex-grow: 1; min-width: 0; text-align: left; padding-right: 10px; font-size: 1.1em; word-break: break-all;">${finalShortUrl}</a>
+                    
+                    <button type="button" onclick="copyLink('${finalShortUrl}', this)">Copy</button>
+                </div>
+
+                <div id="countdownStatus_${histId}" class="success complete" style="margin-top: 20px; padding: 10px; border: 1px solid var(--success-color); color: var(--text); font-weight: 600; font-size: 1.1em; display: block; background: rgba(76, 175, 80, 0.3);">
+                    <span style="font-weight: 700; color: var(--success-color);">🚀 Deployment Complete! Link is Fully Active.</span>
+                </div>
+                <p id="historyScriptConfirmation_${histId}" class="reference-link" style="display: block; margin: 10px 0 0 0;">Script Confirmation: ${appsScriptResultText}</p>
+            `;
+            // --- END COMPLETED HISTORY ITEM ---
+            
+            historyList.prepend(historyItem);
+            historyContainer.style.display = 'block';
+
+            outputDiv.innerHTML = '';
+            outputDiv.className = '';
+            outputDiv.style.display = 'none';
+            
+            updateSubmitButton();
+        }
+
+        // --- Event Listeners for Real-Time Validation & Submission Logic ---
+        document.addEventListener('DOMContentLoaded', updateSubmitButton);
+
+        slugInput.addEventListener('input', () => {
+            if (outputDiv.className === 'error' || outputDiv.className === 'loading' || outputDiv.className === 'success') {
+                outputDiv.innerHTML = '';
+                outputDiv.className = '';
+                outputDiv.style.display = 'none';
+                if (countdownIntervals.has(mainOutputId)) {
+                    clearInterval(countdownIntervals.get(mainOutputId));
+                    countdownIntervals.delete(mainOutputId);
+                }
+            }
+            
+            const slug = slugInput.value;
+            const pattern = new RegExp(slugInput.getAttribute('pattern'));
+
+            if (!pattern.test(slug)) {
+                slugValidation.className = 'validation-message invalid';
+                slugValidation.textContent = 'Unsupported characters detected! Only a-z, 0-9, -, _, / are allowed.';
+                isSlugAvailable = false;
+                updateSubmitButton();
+                clearTimeout(slugCheckTimeout);
+                return;
+            }
+
+            clearTimeout(slugCheckTimeout);
+            slugValidation.className = 'validation-message checking';
+            slugValidation.textContent = 'Typing...';
+            isSlugAvailable = false;
+            updateSubmitButton();
+
+            slugCheckTimeout = setTimeout(() => {
+                if (slug) {
+                    checkSlugAvailability(slug);
+                } else {
+                    slugValidation.textContent = '';
+                }
+            }, 500);
+        });
+
+        longUrlInput.addEventListener('input', () => {
+            if (outputDiv.className === 'error' || outputDiv.className === 'loading' || outputDiv.className === 'success') {
+                outputDiv.innerHTML = '';
+                outputDiv.className = '';
+                outputDiv.style.display = 'none';
+                if (countdownIntervals.has(mainOutputId)) {
+                    clearInterval(countdownIntervals.get(mainOutputId));
+                    countdownIntervals.delete(mainOutputId);
+                }
+            }
+
+            const url = longUrlInput.value.trim();
+            checkUrlExistence(url);
+        });
+        
+        emailInput.addEventListener('input', () => {
+            if (outputDiv.className === 'error' || outputDiv.className === 'loading' || outputDiv.className === 'success') {
+                outputDiv.innerHTML = '';
+                outputDiv.className = '';
+                outputDiv.style.display = 'none';
+                if (countdownIntervals.has(mainOutputId)) {
+                    clearInterval(countdownIntervals.get(mainOutputId));
+                    countdownIntervals.delete(mainOutputId);
+                }
+            }
+
+            const email = emailInput.value.trim();
+            checkEmailValidity(email);
+        });
+
+        document.getElementById('shortenerForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            submitBtn.disabled = true;
+            
+            if (outputDiv.className === 'success') {
+                moveCurrentOutputToHistory();
+            }
+            
+            outputDiv.style.display = 'block';
+            outputDiv.className = 'loading';
+
+            checkUrlExistence(longUrlInput.value.trim());
+            checkEmailValidity(emailInput.value.trim());
+
+            if (!isSlugAvailable || !isUrlValid || !isEmailValid) {
+                if (!isSlugAvailable) await checkSlugAvailability(slugInput.value.trim());
+
+                if (!isSlugAvailable || !isUrlValid || !isEmailValid) {
+                     outputDiv.innerHTML = '<strong>Error:</strong> Please fix the validation errors before submitting.';
+                     outputDiv.className = 'error';
+                     outputDiv.style.display = 'block';
+                     submitBtn.disabled = false;
+                     return;
+                }
+            }
+
+            const originalUrl = longUrlInput.value.trim();
+            const submittedSlug = slugInput.value.trim();
+            const finalShortUrl = CUSTOM_DOMAIN_BASE + submittedSlug;
+            const formData = new FormData(this);
+
+            let currentMessageIndex = 0;
+            const totalLoadingSteps = loadingMessages.length;
+            const loadingDurationPerStep = 1750;
+            let loadingInterval;
+
+            function startLoadingSequence() {
+                outputDiv.innerHTML = `
+                    <div id="loadingArea">
+                        <div id="conversionDisplay">
+                            <div class="loading-message-box" style="opacity: 1;">${loadingMessages[0]}</div>
+                        </div>
+                        <div class="loading-gif-container">
+                            <img src="src/img/loading.gif" alt="Processing animation" class="loading-gif">
+                        </div>
+                    </div>
+                `;
+                outputDiv.className = 'loading';
+                currentMessageIndex = 1;
+
+                loadingInterval = setInterval(() => {
+                    const messageBox = outputDiv.querySelector('.loading-message-box');
+                    if (messageBox) {
+                        messageBox.style.opacity = 0;
+                        
+                        setTimeout(() => {
+                            messageBox.textContent = loadingMessages[currentMessageIndex];
+                            messageBox.style.opacity = 1;
+                            currentMessageIndex = (currentMessageIndex + 1) % totalLoadingSteps;
+                        }, 500);
+                    }
+                }, loadingDurationPerStep);
+            }
+
+            function stopLoadingSequence() {
+                clearInterval(loadingInterval);
+            }
+
+            let appsScriptResultText = 'N/A';
+
+            try {
+                startLoadingSequence();
+                
+                const animationPromise = new Promise(resolve => setTimeout(resolve, totalLoadingSteps * loadingDurationPerStep));
+
+                const fetchPromise = fetch(APPS_SCRIPT_URL, {
+                    method: 'POST',
+                    mode: 'cors',
+                    body: new URLSearchParams(formData)
+                });
+
+                const [_, response] = await Promise.all([animationPromise, fetchPromise]);
+                
+                stopLoadingSequence();
+
+                appsScriptResultText = await response.text();
+                
+                if (!response.ok || appsScriptResultText.startsWith("Error:")) {
+                    throw new Error(appsScriptResultText.startsWith("Error:") ? appsScriptResultText.substring(6) : `Script returned status ${response.status}. Message: ${appsScriptResultText}`);
+                }
+                
+                // --- SUCCESS FLOW: Live Output ---
+                clearValidationMessages();
+
+                outputDiv.innerHTML = `
+                    <p style="font-size: 1.2em; color: var(--success-color); font-weight: bold; margin-bottom: 5px; padding: 25px 25px 5px;">✅ Short Link Generated Successfully!</p>
+                    
+                    <div id="successUrlDetails">
+                        <span class="url-label">Original URL:</span>
+                        <strong><a href="${originalUrl}" target="_blank" style="color: inherit; text-decoration: underline;">${originalUrl}</a></strong>
+                        <span class="url-label" style="margin-top: 15px;">Shortened Link:</span>
+                        <strong><a id="shortLinkTextSuccess" href="${finalShortUrl}" target="_blank" style="color: inherit; text-decoration: underline;">${finalShortUrl}</a></strong>
+                    </div>
+                    
+                    <div id="linkDisplay" style="margin: 15px 25px;">
+                        <a id="shortLinkText" href="${finalShortUrl}" target="_blank">${finalShortUrl}</a>
+                        
+                        <button type="button" onclick="copyLink('${finalShortUrl}', this)">Copy</button>
+                    </div>
+                    
+                    <div id="countdownStatus" style="margin: 20px 25px 0;">
+                        <span style="display: block; font-weight: 700;">📡 Server Deployment Commenced...</span>
+                        <span id="countdownTimer" style="display: block; margin-top: 5px;">Link active in: 30 seconds</span>
+                    </div>
+                    
+                    <div id="waitContainer" class="wait-notification">
+                        <h3>
+                    Wait 30 seconds before submitting a new link.
+                        </h3>
+                    </div>
+
+                    <p id="scriptConfirmation" class="reference-link" style="display: none; margin: 10px 25px 25px;">Script Confirmation: ${appsScriptResultText}</p>
+                `;
+                outputDiv.className = 'success';
+                
+                let timer = 30;
+                const countdownTimerElement = outputDiv.querySelector('#countdownTimer');
+                const countdownStatusElement = outputDiv.querySelector('#countdownStatus');
+                const scriptConfirmationElement = outputDiv.querySelector('#scriptConfirmation');
+
+                const countdownInterval = setInterval(() => {
+                    timer--;
+                    if (timer >= 0) {
+                        countdownTimerElement.textContent = `Link active in: ${timer} seconds`;
+                    } else {
+                        clearInterval(countdownInterval);
+                        
+                        countdownStatusElement.classList.add('complete');
+                        countdownStatusElement.innerHTML = `
+                            <span style="font-weight: 700; color: var(--success-color);">🚀 Deployment Complete! Link is Fully Active.</span>
+                        `;
+                        
+                        scriptConfirmationElement.style.display = 'block';
+                        moveCompletedOutputToHistory(originalUrl, finalShortUrl, appsScriptResultText);
+                    }
+                }, 1000);
+
+                countdownIntervals.set(mainOutputId, countdownInterval);
+                document.getElementById('shortenerForm').reset();
+
+            } catch (error) {
+                stopLoadingSequence();
+                console.error('Submit/Sync Error:', error);
+                outputDiv.innerHTML = `<strong>Deployment Failed:</strong> ${error.message}<br>Please fix the error and try again.`;
+                outputDiv.className = 'error';
+                submitBtn.disabled = false;
+            }
+        });
+
+
+        function copyLink(text, button) {
+            const input = document.createElement('textarea');
+            input.value = text;
+            document.body.appendChild(input);
+            input.select();
+            document.execCommand('copy');
+            document.body.removeChild(input);
+
+            const originalText = button.textContent;
+            button.textContent = 'Copied! ✅';
+            // Use the CSS class style for button feedback
+            button.style.backgroundColor = '#3e8e41'; 
+            setTimeout(() => {
+                button.textContent = originalText;
+                // Revert button color back via CSS variable
+                button.style.backgroundColor = 'var(--success-color)';
+            }, 2000);
+        }
+        
+        // --- Sidebar & Intersection Observer ---
+
+        function toggleSidebar(){
+            document.getElementById("sidebar").classList.toggle("active");
+        }
+        
+        document.addEventListener("click", function(e){
+            const sidebar = document.getElementById("sidebar");
+            const hamburger = document.querySelector(".hamburger");
+            if(sidebar.classList.contains("active") && !sidebar.contains(e.target) && !hamburger.contains(e.target)){
+                sidebar.classList.remove("active");
+            }
+        });
+
+        const sections = document.querySelectorAll(".section, .event-gallery");
+        const observer = new IntersectionObserver(entries=>{
+            entries.forEach(entry=>{
+                if(entry.isIntersecting){
+                    entry.target.classList.add("show");
+                }
+            });
+        },{threshold:0.05});
+        sections.forEach(sec=>observer.observe(sec));
+        
+        
+        // --- Contact Form Validation and Submission ---
+        const form = document.getElementById('contactForm');
+        const statusDiv = document.getElementById('status');
+        const contactSubmitButton = form.querySelector('button[type="submit"]');
+
+        function validateField(input) {
+            const errorSpan = input.closest('.form-group').querySelector('.error-message');
+            let errorMessage = '';
+
+            if (input.name === 'name') {
+                if (!input.value.trim()) {
+                    errorMessage = 'Enter your Name.';
+                } else if (!/^[a-zA-Z\s]+$/.test(input.value.trim())) {
+                    errorMessage = 'Please enter a valid name (letters and spaces only).';
+                }
+            } else if (input.name === 'email') {
+                if (!input.value.trim()) {
+                    errorMessage = 'Enter your Email ID.';
+                } else if (!/^\S+@\S+\.\S+$/.test(input.value.trim())) {
+                    errorMessage = 'Please enter a valid email address.';
+                }
+            } else if (input.name === 'phone') {
+                if (!input.value.trim()) {
+                    errorMessage = 'Enter your Phone number.';
+                } else if (input.value.length < 10 || isNaN(input.value) || input.value.length > 15) { 
+                    errorMessage = 'Please enter a valid phone number.';
+                }
+            } else if (input.name === 'message' && !input.value.trim()) {
+                errorMessage = 'Enter your Message here.';
+            }
+
+            if (errorMessage) {
+                input.classList.add('error-input');
+                errorSpan.textContent = errorMessage;
+                errorSpan.style.display = 'block';
+                return false;
+            } else {
+                input.classList.remove('error-input');
+                errorSpan.style.display = 'none';
+                return true;
+            }
+        }
+
+        form.querySelectorAll('input, textarea').forEach(input => {
+            input.addEventListener('input', () => validateField(input));
+            input.addEventListener('blur', () => validateField(input));
+        });
+
+        form.addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            let allValid = true;
+            form.querySelectorAll('input, textarea').forEach(input => {
+                if (!validateField(input)) {
+                    allValid = false;
+                }
+            });
+
+            if (!allValid) {
+                statusDiv.innerHTML = "Please fix the errors above.";
+                statusDiv.className = 'status-error';
+                statusDiv.style.display = 'block';
+                return;
+            }
+
+            statusDiv.innerHTML = "Submitting...";
+            statusDiv.className = 'submitting';
+            statusDiv.style.display = 'block';
+            contactSubmitButton.disabled = true;
+
+            const formData = new FormData(form);
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', form.action);
+            xhr.setRequestHeader('Accept', 'application/json');
+
+            xhr.onload = function() {
+                contactSubmitButton.disabled = false;
+                if (xhr.status === 200) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.result === 'success') {
+                            statusDiv.innerHTML = "Message sent successfully!";
+                            statusDiv.className = 'status-success';
+                            form.reset();
+                            form.querySelectorAll('input, textarea').forEach(input => {
+                                input.classList.remove('error-input');
+                                const errorSpan = input.closest('.form-group').querySelector('.error-message');
+                                if(errorSpan) errorSpan.style.display = 'none';
+                            });
+                        } else {
+                            statusDiv.innerHTML = "Error: " + response.message;
+                            statusDiv.className = 'status-error';
+                        }
+                    } catch (e) {
+                        statusDiv.innerHTML = "An unexpected error occurred. Check your script URL.";
+                        statusDiv.className = 'status-error';
+                    }
+                } else {
+                    statusDiv.innerHTML = "Error: Could not send message. Server responded with status " + xhr.status;
+                    statusDiv.className = 'status-error';
+                }
+            };
+            xhr.onerror = function() {
+                contactSubmitButton.disabled = false;
+                statusDiv.innerHTML = "Network Error: Could not connect to the server.";
+                statusDiv.className = 'status-error';
+            };
+            xhr.send(formData);
+        });
+
+         // Disable right-click
+document.addEventListener('contextmenu', function(e) {
+    e.preventDefault();
+});
+
+// Disable common developer shortcuts
+document.addEventListener('keydown', function(e) {
+    // F12
+    if (e.key === 'F12') {
+        e.preventDefault();
+    }
+
+    // Ctrl+Shift+I
+    if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
+        e.preventDefault();
+    }
+
+    // Ctrl+Shift+C
+    if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
+        e.preventDefault();
+    }
+
+    // Ctrl+Shift+J
+    if (e.ctrlKey && e.shiftKey && (e.key === 'J' || e.key === 'j')) {
+        e.preventDefault();
+    }
+
+    // Ctrl+U
+    if (e.ctrlKey && (e.key === 'U' || e.key === 'u')) {
+        e.preventDefault();
+    }
+});
+    document.addEventListener('dragstart', function(e) {
+    e.preventDefault();
+});
+
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
