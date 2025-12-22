@@ -39,7 +39,7 @@ It is completely front-end driven, making it deployable on **GitHub Pages** or a
 
 ## 🚀 Live Demo
 
-👉 [Try it here](https://custom-longurl.github.io/short-url/) *(Replace with your live link if hosted)*
+👉 [Try it here](https://urlz.site/) *(Replace with your live link if hosted)*
 
 ---
 
