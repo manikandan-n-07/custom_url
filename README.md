@@ -250,7 +250,7 @@ Ideas for contribution: dark/light mode toggle, link expiry dates, click analyti
 
 # Manikandan N
 
-*Full Stack Developer & Creator of URLz*
+*Full Stack Developer & Creator of Custom URLs*
 
 [![GitHub](https://img.shields.io/badge/GitHub-@manikandan--n--07-181717?style=flat-square&logo=github)](https://github.com/manikandan-n-07)
 [![LinkedIn](https://img.shields.io/badge/LinkedIn-Manikandan_N-0077B5?style=flat-square&logo=linkedin)](https://www.linkedin.com/in/manikandan-n-35a1bb294)
